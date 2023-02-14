@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const { SELECT } = require('sequelize/types/query-types');
 const sequelize = require('../config/connection');
 const { Comic, User } = require('../models');
 const withAuth = require('../utils/auth');
@@ -76,11 +77,18 @@ router.get('/feed', withAuth, async (req, res) => {
 
     const user = userData.get({ plain: true });
     const comicData = await Comic.findAll();
+    const tablejoinData = await sequelize.query(
+      "SELECT * FROM comicData INNER JOIN User ON Comic.user_id = User.user_id "
+    );
+    const tablejoin = tablejoinData.map( (t) => {
+      return t.get({ plain: true });
+    });
     const comics = comicData.map( (c) => {
       return c.get({ plain: true });
     });
 
     res.render('feed', {
+      tablejoin,
       comics,
       ...user,
       logged_in: true
